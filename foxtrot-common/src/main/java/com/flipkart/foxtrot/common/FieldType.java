@@ -26,5 +26,5 @@ public enum FieldType {
     DOUBLE,
     BOOLEAN,
     DATE,
-    OBJECT
+    GEO_POINT
 }
