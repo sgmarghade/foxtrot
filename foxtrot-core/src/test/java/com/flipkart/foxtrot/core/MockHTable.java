@@ -15,15 +15,21 @@
  */
 package com.flipkart.foxtrot.core;
 
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.Message;
+import com.google.protobuf.Service;
+import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.KeyValue;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.coprocessor.Batch.Call;
 import org.apache.hadoop.hbase.client.coprocessor.Batch.Callback;
+import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.Filter.ReturnCode;
-import org.apache.hadoop.hbase.ipc.CoprocessorProtocol;
+import org.apache.hadoop.hbase.ipc.CoprocessorRpcChannel;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
@@ -172,6 +178,11 @@ public class MockHTable implements HTableInterface {
         return null;
     }
 
+    @Override
+    public TableName getName() {
+        return null;
+    }
+
     /**
      * No configuration needed to work so this returns null.
      *
@@ -214,6 +225,11 @@ public class MockHTable implements HTableInterface {
             }
             return true;
         }
+    }
+
+    @Override
+    public Boolean[] exists(List<Get> list) throws IOException {
+        return new Boolean[0];
     }
 
     @Override
@@ -526,6 +542,11 @@ public class MockHTable implements HTableInterface {
     }
 
     @Override
+    public long incrementColumnValue(byte[] bytes, byte[] bytes1, byte[] bytes2, long l, Durability durability) throws IOException {
+        return 0;
+    }
+
+    @Override
     public long incrementColumnValue(byte[] row, byte[] family,
                                      byte[] qualifier, long amount, boolean writeToWAL) throws IOException {
         if (check(row, family, qualifier, null)) {
@@ -554,13 +575,20 @@ public class MockHTable implements HTableInterface {
     }
 
     @Override
-    public RowLock lockRow(byte[] row) throws IOException {
+    public CoprocessorRpcChannel coprocessorService(byte[] bytes) {
         return null;
     }
 
     @Override
-    public void unlockRow(RowLock rl) throws IOException {
+    public <T extends Service, R> Map<byte[], R> coprocessorService(Class<T> aClass, byte[] bytes, byte[] bytes1, Call<T, R> call) throws ServiceException, Throwable {
+        return null;
     }
+
+    @Override
+    public <T extends Service, R> void coprocessorService(Class<T> aClass, byte[] bytes, byte[] bytes1, Call<T, R> call, Callback<R> callback) throws ServiceException, Throwable {
+
+    }
+
 
     @Override
     public Object[] batch(List<? extends Row> actions)
@@ -584,6 +612,16 @@ public class MockHTable implements HTableInterface {
     }
 
     @Override
+    public <R> void batchCallback(List<? extends Row> list, Object[] objects, Callback<R> callback) throws IOException, InterruptedException {
+
+    }
+
+    @Override
+    public <R> Object[] batchCallback(List<? extends Row> list, Callback<R> callback) throws IOException, InterruptedException {
+        return new Object[0];
+    }
+
+    @Override
     public void batch(List<? extends Row> actions, Object[] results)
             throws IOException,
             InterruptedException {
@@ -599,20 +637,6 @@ public class MockHTable implements HTableInterface {
         return results.toArray(new Result[results.size()]);
     }
 
-    @Override
-    public Result increment(Increment increment) throws IOException {
-        List<KeyValue> kvs = new ArrayList<KeyValue>();
-        Map<byte[], NavigableMap<byte[], Long>> famToVal = increment.getFamilyMap();
-        for (Entry<byte[], NavigableMap<byte[], Long>> ef : famToVal.entrySet()) {
-            byte[] family = ef.getKey();
-            NavigableMap<byte[], Long> qToVal = ef.getValue();
-            for (Entry<byte[], Long> eq : qToVal.entrySet()) {
-                incrementColumnValue(increment.getRow(), family, eq.getKey(), eq.getValue());
-                kvs.add(new KeyValue(increment.getRow(), family, eq.getKey(), Bytes.toBytes(eq.getValue())));
-            }
-        }
-        return new Result(kvs);
-    }
 
     private MockHTable() {
     }
@@ -762,25 +786,8 @@ public class MockHTable implements HTableInterface {
     }
 
     @Override
-    public <T extends CoprocessorProtocol> T coprocessorProxy(Class<T> protocol, byte[] row) {
-        // TODO Auto-generated method stub
+    public Result increment(Increment increment) throws IOException {
         return null;
-    }
-
-    @Override
-    public <T extends CoprocessorProtocol, R> Map<byte[], R> coprocessorExec(
-            Class<T> protocol, byte[] startKey, byte[] endKey, Call<T, R> callable) throws IOException,
-            Throwable {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public <T extends CoprocessorProtocol, R> void coprocessorExec(
-            Class<T> protocol, byte[] startKey, byte[] endKey, Call<T, R> callable, Callback<R> callback)
-            throws IOException, Throwable {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -796,6 +803,11 @@ public class MockHTable implements HTableInterface {
     }
 
     @Override
+    public void setAutoFlushTo(boolean b) {
+
+    }
+
+    @Override
     public long getWriteBufferSize() {
         // TODO Auto-generated method stub
         return 0;
@@ -805,5 +817,20 @@ public class MockHTable implements HTableInterface {
     public void setWriteBufferSize(long writeBufferSize) throws IOException {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public <R extends Message> Map<byte[], R> batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor, Message message, byte[] bytes, byte[] bytes1, R r) throws ServiceException, Throwable {
+        return null;
+    }
+
+    @Override
+    public <R extends Message> void batchCoprocessorService(Descriptors.MethodDescriptor methodDescriptor, Message message, byte[] bytes, byte[] bytes1, R r, Callback<R> callback) throws ServiceException, Throwable {
+
+    }
+
+    @Override
+    public boolean checkAndMutate(byte[] bytes, byte[] bytes1, byte[] bytes2, CompareFilter.CompareOp compareOp, byte[] bytes3, RowMutations rowMutations) throws IOException {
+        return false;
     }
 }
